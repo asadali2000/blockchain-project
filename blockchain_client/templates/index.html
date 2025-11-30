@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Evidence Custodian Identity Generator</title>
+
+    
+    <link rel="stylesheet" href="/static/vendor/bootstrap/css/bootstrap.min.css">
+    <link rel="stylesheet" href="/static/vendor/DataTables/css/datatables.min.css">
+    <link rel="stylesheet" href="/static/vendor/font-awesome/font-awesome.min.css">
+    <link rel="stylesheet" href="/static/css/custom.css">
+</head>
+
+<body style="background:#f4f5f7;">
+
+
+<nav class="navbar navbar-expand-lg navbar-dark" style="background:#1e1e2f;">
+    <div class="container">
+        <a href="#" class="navbar-brand fw-bold">Evidence Client (Blockchain UI)</a>
+        <div class="collapse navbar-collapse">
+            <ul class="navbar-nav ms-auto">
+                <li class="nav-item active"><a href="/" class="nav-link">Identity Generator</a></li>
+                <li class="nav-item"><a href="/make/transaction" class="nav-link">Record Custody Event</a></li>
+                <li class="nav-item"><a href="/view/transactions" class="nav-link">View Custody Logs</a></li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+
+<section class="container mt-5 pt-4">
+    <div class="card shadow-sm border-0 rounded">
+        <div class="card-body text-center">
+            <h2 class="text-primary fw-bold">Generate Digital Identity</h2>
+            <p class="lead">
+                Create a cryptographic identity (public/private key) representing a custody role such as:  
+                <b>Police Officer, Forensic Analyst, or Legal Authority</b>.
+            </p>
+            <button class="btn btn-success btn-lg shadow-sm">Generate Identity</button>
+        </div>
+    </div>
+</section>
+
+
+<section class="container mt-4">
+    <div class="card shadow-sm border-0 rounded">
+        <div class="card-body">
+
+            <label class="fw-bold">Public Key (Shareable):</label>
+            <textarea id="public_key" rows="4" class="form-control shadow-sm" readonly></textarea>
+
+            <br>
+
+            <label class="fw-bold">Private Key (Keep Secure):</label>
+            <textarea id="private_key" rows="4" class="form-control shadow-sm" readonly></textarea>
+
+            <div id="warning" class="alert alert-danger mt-3" style="display:none;">
+                <strong>⚠ IMPORTANT – Custody Digital Identity</strong>
+                <ul class="mb-0">
+                    <li><b>Private Key must not be shared</b> — it is used to digitally sign custody transfers.</li>
+                    <li>Keep both keys securely stored. <b>There is no recovery method</b> if lost.</li>
+                    <li>Each generated key pair represents an individual responsible for handling evidence.</li>
+                </ul>
+            </div>
+
+        </div>
+    </div>
+</section>
+
+
+<script src="/static/vendor/jquery/jquery.min.js"></script>
+<script src="/static/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+<script>
+    $(function() {
+        $('button').click(function() {
+            $.ajax({
+                url: '/wallet/new',
+                type: 'GET',
+                success: function(response) {
+                    $('#public_key').text(response['public_key']);
+                    $('#private_key').text(response['private_key']);
+                    $('#warning').fadeIn();
+                },
+                error: function(error) {
+                    console.log(error);
+                }
+            });
+        });
+    });
+</script>
+
+</body>
+</html>
+
