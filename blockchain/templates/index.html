@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Evidence Ledger – Blockchain Node</title>
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="/static/vendor/bootstrap/css/bootstrap.min.css">
+    <link rel="stylesheet" href="/static/vendor/DataTables/css/datatables.min.css">
+    <link rel="stylesheet" href="/static/vendor/font-awesome/font-awesome.min.css">
+    <link rel="stylesheet" href="/static/css/custom.css">
+</head>
+
+<body style="background:#f4f5f7;">
+
+<!-- NAVBAR -->
+<nav class="navbar navbar-expand-lg navbar-dark" style="background:#1e1e2f;">
+    <div class="container">
+        <a href="#" class="navbar-brand fw-bold">🧾 Evidence Ledger (Node)</a>
+        <div class="collapse navbar-collapse">
+            <ul class="navbar-nav ms-auto">
+                <li class="nav-item"><a href="/" class="nav-link active fw-bold">Home</a></li>
+                <li class="nav-item"><a href="/configure" class="nav-link">Configure</a></li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<!-- SECTION 1 – PENDING EVENTS -->
+<section class="container mt-5">
+    <div class="card shadow-sm border-0">
+        <div class="card-body text-center">
+            <h4 class="fw-bold">Pending Evidence Custody Events</h4>
+            <button id="refresh_transactions" class="btn btn-primary mt-2">🔁 Refresh</button>
+        </div>
+        <table id="unmined_transactions_table" class="table table-striped"></table>
+        <div class="text-center p-3">
+            <button id="mine_button" class="btn btn-success btn-lg shadow-sm">⛏ Mine Custody Block</button>
+        </div>
+    </div>
+</section>
+
+<!-- SECTION 2 – CONFIRMED BLOCKCHAIN -->
+<section class="container mt-4 mb-5">
+    <div class="card shadow-sm border-0">
+        <div class="card-body text-center">
+            <h4 class="fw-bold">Confirmed Custody Chain</h4>
+            <button id="refresh_blockchain" class="btn btn-primary mt-2">🔁 Sync with peers</button>
+        </div>
+        <table id="transactions_table" class="table table-striped"></table>
+    </div>
+</section>
+
+<!-- SCRIPTS -->
+<script src="/static/vendor/jquery/jquery.min.js"></script>
+<script src="/static/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+<script src="/static/vendor/DataTables/js/datatables.min.js"></script>
+<script src="/static/vendor/DataTables/js/ellipsis.js"></script>
+
+<script>
+$(function() {
+
+    // Load pending transactions
+    function loadPending() {
+        $.ajax({
+            url: "/transactions/get",
+            type: "GET",
+            success: function(res) {
+                let txs = [], count = 1;
+                res.transactions.forEach(tx => {
+                    txs.push([count++, tx.sender_public_key, tx.recipient_public_key, tx.amount]);
+                });
+                $('#unmined_transactions_table').DataTable({
+                    destroy: true,
+                    data: txs,
+                    columns: [
+                        { title: "#" },
+                        { title: "Sender" },
+                        { title: "Recipient" },
+                        { title: "Evidence Details" }
+                    ],
+                    columnDefs: [{ targets: [1,2,3], render: $.fn.dataTable.render.ellipsis(25) }]
+                });
+            }
+        });
+    }
+
+    // Load confirmed blockchain
+    function loadChain() {
+        $.ajax({
+            url: "/chain",
+            type: "GET",
+            success: function(res) {
+                let txs = [], count = 1;
+                res.chain.forEach(block => {
+                    block.transactions.forEach(tx => {
+
+                        // ❗ Hide mining reward
+                        if (tx.sender_public_key === "The Blockchain") return;
+
+                        let date = new Date(block.timestamp * 1000).toLocaleString();
+                        txs.push([count++, tx.sender_public_key, tx.recipient_public_key, tx.amount, date, block.block_number]);
+                    });
+                });
+                $('#transactions_table').DataTable({
+                    destroy: true,
+                    data: txs,
+                    columns: [
+                        { title: "#" },
+                        { title: "Sender" },
+                        { title: "Recipient" },
+                        { title: "Evidence Details" },
+                        { title: "Timestamp" },
+                        { title: "Block #" }
+                    ],
+                    columnDefs: [{ targets: [1,2,3,4], render: $.fn.dataTable.render.ellipsis(25) }]
+                });
+            }
+        });
+    }
+
+    // Mine block
+    $('#mine_button').click(function() {
+        $.ajax({
+            url: '/mine',
+            type: 'GET',
+            success: function() {
+                alert("⛏ Block mined successfully!");
+                loadPending();
+                loadChain();
+            },
+            error: function() { alert("❌ Error mining block!"); }
+        });
+    });
+
+    // Refresh buttons
+    $('#refresh_transactions').click(loadPending);
+    $('#refresh_blockchain').click(function() {
+        $.ajax({
+            url: "/nodes/resolve",
+            type: "GET",
+            success: loadChain
+        });
+    });
+
+    // Initial load
+    loadPending();
+    loadChain();
+
+});
+</script>
+
+</body>
+</html>
+

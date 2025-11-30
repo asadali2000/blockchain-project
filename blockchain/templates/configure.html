@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Evidence Ledger | Node Configuration</title>
+
+    <!-- CSS Libraries -->
+    <link rel="stylesheet" href="/static/vendor/bootstrap/css/bootstrap.min.css">
+    <link rel="stylesheet" href="/static/vendor/font-awesome/font-awesome.min.css">
+    <link rel="stylesheet" href="/static/css/custom.css">
+</head>
+
+<body style="background:#f4f5f7;">
+
+<!-- Navigation -->
+<nav class="navbar navbar-expand-lg navbar-dark" style="background:#1e1e2f;">
+    <div class="container">
+        <a href="#" class="navbar-brand fw-bold">🧾 Evidence Ledger Node</a>
+        <div class="collapse navbar-collapse">
+            <ul class="navbar-nav ms-auto">
+                <li class="nav-item"><a href="/" class="nav-link">Home</a></li>
+                <li class="nav-item active"><a href="/configure" class="nav-link">Configure</a></li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<!-- Configuration Form -->
+<section class="container mt-5 pt-4">
+    <div class="card shadow-sm border-0 rounded">
+        <div class="card-body">
+
+            <h2 class="text-center text-primary fw-bold">Register Peer Evidence Nodes</h2>
+            <p class="text-center mb-4">
+                Enter the URLs of trusted partner nodes (such as police stations, forensic labs, legal authorities)
+                that participate in maintaining the blockchain-based chain of custody.
+            </p>
+
+            <form id="node_form">
+                <div class="row mb-3">
+                    <label class="col-sm-3 fw-bold">Node URLs:</label>
+                    <div class="col-sm-9">
+                        <input type="text" name="nodes" id="nodes" class="form-control shadow-sm"
+                               placeholder="e.g., 127.0.0.1:5002, 127.0.0.1:5003">
+                    </div>
+                </div>
+
+                <div class="text-center">
+                    <button type="button" id="add_node_button"
+                        class="btn btn-success btn-lg shadow-sm">➕ Add Peer Node</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</section>
+
+<!-- Registered Nodes Display -->
+<section class="container mt-4">
+    <div class="card shadow-sm border-0 rounded">
+        <div class="card-body">
+            <h4 class="text-center fw-bold mb-2">🔗 Connected Evidence Nodes</h4>
+            <p class="text-center">This blockchain node will synchronize chain-of-custody records with these peers:</p>
+            <ul id="list_nodes"
+                class="list-group text-center shadow-sm"
+                style="padding:10px; min-height:40px;">
+                <!-- Dynamic Content Here -->
+            </ul>
+        </div>
+    </div>
+</section>
+
+<!-- SPA Scripts -->
+<script src="/static/vendor/jquery/jquery.min.js"></script>
+<script src="/static/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+
+<script>
+    $(function() {
+
+        // Add node
+        $('#add_node_button').click(function() {
+            $.ajax({
+                url: '/nodes/register',
+                type: 'POST',
+                dataType: 'json',
+                data: $('#node_form').serialize(),
+                success: function() {
+                    $('#nodes').val('');
+                    location.reload();
+                },
+                error: function(err) {
+                    console.error(err);
+                }
+            });
+        });
+
+        // Display existing nodes
+        $.ajax({
+            url: '/nodes/get',
+            type: 'GET',
+            success: function(response) {
+                response.nodes.forEach(node => {
+                    $('#list_nodes').append(
+                        `<li class="list-group-item shadow-sm rounded">
+                            <a href="http://${node}" target="_blank">${node}</a>
+                        </li>`
+                    );
+                });
+            },
+            error: function(err) {
+                console.error(err);
+            }
+        });
+    });
+</script>
+
+</body>
+</html>
+
